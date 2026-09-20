@@ -1,0 +1,14 @@
+# 密钥与本地配置
+config/config.json
+.env
+*.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# 流水线生成物（报告如需入库，可手动 `git add -f outputs/report.md`）
+outputs/
+*.tmp

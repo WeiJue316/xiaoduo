@@ -1,0 +1,8 @@
+{
+  "agentplan": {
+    "endpoint": "https://PLACEHOLDER/openai/v1/chat/completions",
+    "api_key": "PASTE_YOUR_KEY_HERE",
+    "model": "deepseek-v4-flash"
+  },
+  "judge": { "seed": 42 }
+}

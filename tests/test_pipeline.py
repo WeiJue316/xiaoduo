@@ -85,7 +85,9 @@ def test_report_artifacts_created(result):
     for p in (paths["report_md"], paths["report_html"]):
         assert os.path.exists(p)
     md = open(paths["report_md"], encoding="utf-8").read()
-    assert "最差 3 条详解" in md
-    assert "一致性验证" in md
-    assert "局限性" in md
+    # 报告主体只保留任务要求的三块：整体结论 / 指标分布 / 最差3条
+    assert "## 整体结论" in md
+    assert "## 各指标分布" in md
+    assert "## 最差 3 条详解" in md
+    assert "## 局限性" not in md  # 局限性已移出报告，见 README
     assert all(cid in md for cid in ("case_01", "case_20"))

@@ -27,33 +27,10 @@ def _load_human_notes(attachments_dir):
     return _HUMAN_NOTES
 
 
-LIMITATIONS = [
-    (
-        "指标自身盲区",
-        "「主动协助度」会把『确实只能给信息、不该代办』的回复误判为偏低（如用户仅问材质/规格，本就该答信息而非代办）；"
-        "『正确但没帮上』与『差』的档位边界主观，人工标注之间的分歧本身就说明其模糊。",
-        "case_08、case_13 这类『正确但没用』在有用性维度被我方判定更低，落入了『差』档，而人工标注归为『正确但没帮上』——两者结论一致说『不够好』，但档位分类不同。",
-        "细化『主动』与『代办』的边界定义；对信息类问题单独设指标，避免与代办类混评。",
-    ),
-    (
-        "judge 自身偏差",
-        "LLM 评分存在系统性偏好：倾向打偏高分、往中间值收缩、用词重复；DeepSeek 对中文客服语境的稳定性需抽查。",
-        "会把明显有缺陷的回复（如包含内部事项 case_05）分数偏高，或因措辞程式化而低估高共情回复。",
-        "多模型交叉评分取中位；对低分与高分区抽样人工复核（kappa 一致性）；固定 temperature/seed 并记录版本。",
-    ),
-    (
-        "样本与场景局限",
-        "仅 20 条、单一在线客服场景、无多轮对话上下文、无法回测跨版本，覆盖的意图类别有限（多为售后/查询，缺投诉升级/多轮追问）。",
-        "对『模糊追问类』case（case_16『那两款手机』）需要更多上下文才能准确判断主动度。",
-        "扩样本到数百条并分意图分层；引入真实多轮会话；对每次自动回复改版重跑对比。",
-    ),
-    (
-        "标注噪声",
-        "human_ref 本身是单人主观、未给数值分数、且只有 20 条，无法真正校准；三档编码也依赖我方的解读。",
-        "当人工注释者之间有分歧的 case 被当作『唯一真值』时，验证指标会失真。",
-        "改为双注释者独立标注并计算一致率；将人工问题从『写一段话』升级为『三档+各指标打分』。",
-    ),
-]
+LIMITATIONS_POINTER = (
+    "评估方法的局限性（指标盲区 / judge 偏差 / 样本与场景 / 标注噪声），"
+    "见 README「局限性」一节及任务交付的局限性讨论。"
+)
 
 
 def _fmt(v):
@@ -126,18 +103,10 @@ def build_report(result, validation, attachments_dir, out_dir):
         app_md(f"- 人工标注（对照）：{hn.get('annotator_notes', '')}")
         app_md(f"- 人工参考回复：{hn.get('human_reference', '')}\n")
 
-    app_md("## 一致性验证（vs 人工三档 ground truth）\n")
-    app_md(
-        f"- 三档命中率：**{int(validation['tier_accuracy'] * 100)}%**（{validation['n']} 条）  "
-    )
-    app_md(f"- Spearman（usefulness vs 人工档位排序）：**{validation['spearman_usefulness_vs_truth']}**\n")
-    app_md(f"  > 命中率显示我方评分与人工三档判断的整体一致程度；误判集中在『正确但没帮上』↔『差』的档位边界（如 case_08、case_13），详见局限性。\n")
-
-    app_md("## 局限性\n")
-    for i, (title, impact, case, improve) in enumerate(LIMITATIONS, 1):
-        app_md(f"{i}. **{title}**——{impact}  ")
-        app_md(f"   - 典型踩雷：{case}  ")
-        app_md(f"   - 改进：{improve}\n")
+    app_md("")
+    app_md(f"> 可信度注脚：本方评分与人工三档 ground truth 的命中率为 **{int(validation['tier_accuracy'] * 100)}%**（{validation['n']} 条），"
+           f"Spearman 排序相关 **{validation['spearman_usefulness_vs_truth']}**（详见 README）。")
+    app_md(f"> {LIMITATIONS_POINTER}")
 
     md_text = "\n".join(lines_md)
     with open(f"{out_dir}/report.md", "w", encoding="utf-8") as f:
